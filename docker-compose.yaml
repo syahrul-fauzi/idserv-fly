@@ -1,0 +1,38 @@
+# cSpell: disable
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15.6-alpine  # Menggunakan PostgreSQL versi 15.6 dengan Alpine
+    container_name: postgres_db
+    ports:
+      - '${DB_PORT:-5432}:5432'  # Menetapkan port dinamis, fallback ke 5432 jika tidak ada pengaturan
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}  # Username database, dapat diatur melalui .env
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}  # Password untuk user, dapat diatur melalui .env
+      - POSTGRES_DB=${POSTGRES_DB:-mydatabase}  # Nama database default, dapat diatur melalui .env
+      - PGDATA=/var/lib/postgresql/data/pgdata  # Lokasi data PostgreSQL untuk memastikan data di dalam volume
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Volume untuk persistensi data, agar tidak hilang saat restart
+    networks:
+      - backend  # Menghubungkan ke network 'backend', memudahkan komunikasi antar service
+    restart: unless-stopped  # Mengatur restart policy agar restart kecuali di-stop secara eksplisit
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mydatabase}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    logging:
+      driver: "json-file"  # Menentukan driver logging untuk container
+      options:
+        max-size: "10m"  # Maksimal ukuran file log 10MB
+        max-file: "3"  # Simpan maksimal 3 file log
+
+volumes:
+  postgres_data:
+    driver: local  # Volume menggunakan driver lokal untuk penyimpanan data
+
+networks:
+  backend:
+    driver: bridge  # Menggunakan driver bridge untuk jaringan internal antar container

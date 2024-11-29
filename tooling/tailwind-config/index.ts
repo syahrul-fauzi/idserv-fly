@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-// import colors from "tailwindcss/colors";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import flattenColorPalette from "tailwindcss/lib/util/flattenColorPalette";
@@ -122,13 +121,19 @@ export default {
   plugins: [require("tailwindcss-animate"), addVariablesForColors],
 } satisfies Config;
 
-function addVariablesForColors({ addBase, theme }: any) {
-  const allColors = flattenColorPalette(theme("colors"));
-  let newVars = Object.fromEntries(
+function addVariablesForColors({
+  addBase,
+  theme,
+}: {
+  addBase: (base: Record<string, string>) => void;
+  theme: (key: string) => Record<string, unknown>;
+}) {
+  const allColors = flattenColorPalette(theme("colors")) as Record<string, string>;
+  const newVars: Record<string, string> = Object.fromEntries(
     Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
   );
-
   addBase({
     ":root": newVars,
   });
-}
+} 
+
